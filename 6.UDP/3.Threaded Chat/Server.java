@@ -1,0 +1,110 @@
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+/*Program to implement basic Server Client threaded chat system 
+using Socket programming using UDP
+		by Aniruddha */
+
+class Server_Send extends Thread
+{
+	DatagramSocket sock;
+	
+	public Server_Send(DatagramSocket s)
+	{
+		sock = s;
+		this.start();
+	}
+	
+	public void run()
+	{
+		try
+		{
+			DatagramPacket sPacket;
+			
+			Scanner scan = new Scanner(System.in);
+			
+			String snd;
+			byte msg[];
+			
+			while(true)
+			{
+				snd = scan.nextLine();
+				msg = snd.getBytes();
+				sPacket = new DatagramPacket(msg,msg.length,InetAddress.getLocalHost(),8081);
+				sock.send(sPacket);
+				if(snd.equals("#"))
+				{
+					System.out.println("GOODBYE");
+					sock.close();
+					System.exit(0);
+				}
+			}
+		}
+		catch(IOException e){}
+		
+	}
+}
+
+class Server_Recieve extends Thread
+{
+	DatagramSocket sock;
+	
+	public Server_Recieve(DatagramSocket s)
+	{
+		sock = s;
+		this.start();
+	}
+	
+	public void run()
+	{
+		try
+		{
+			DatagramPacket rPacket;
+		
+			String rcv;
+			
+			while(true)
+			{
+				rPacket = new DatagramPacket(new byte[1024],1024);
+				sock.receive(rPacket);
+				rcv = new String(rPacket.getData()).trim();
+				if(rcv.equals("#"))
+				{
+					System.out.println("GOODBYE");
+					sock.close();
+					System.exit(0);
+				}
+				System.out.println("Client : "+rcv);
+			}
+		}
+		catch(IOException e){}
+		
+	}
+}
+
+
+class Server
+{
+	public static void main(String args[]) throws IOException
+	{
+		DatagramSocket sock = new DatagramSocket (8080);
+		
+		System.out.println("Start chatting &  Enter # for exit");
+		
+		new Server_Recieve(sock);
+		new Server_Send(sock);
+	}
+}
+/*
+Start chatting &  Enter # for exit
+Client : hi
+hlw
+how r u
+Client : fine
+Client : thank u
+Client : bye
+#
+GOODBYE
+
+*/
